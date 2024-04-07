@@ -6,6 +6,7 @@
 #include <fabgl.h>
 
 #include "agon.h"
+#include "context.h"
 #include "buffer_stream.h"
 #include "types.h"
 
@@ -14,8 +15,8 @@ class VDUStreamProcessor {
 		std::shared_ptr<Stream> inputStream;
 		std::shared_ptr<Stream> outputStream;
 		std::shared_ptr<Stream> originalOutputStream;
+		std::shared_ptr<Context> context;
 		bool commandsEnabled = true;
-		uint8_t lastPlotCommand = 0;
 
 		int16_t readByte_t(uint16_t timeout);
 		int32_t readWord_t(uint16_t timeout);
@@ -31,7 +32,6 @@ class VDUStreamProcessor {
 		void vdu_mode();
 		void vdu_graphicsViewport();
 		void vdu_plot();
-		void vdu_plotPath(uint8_t mode);
 		void vdu_resetViewports();
 		void vdu_textViewport();
 		void vdu_origin();
@@ -44,7 +44,7 @@ class VDUStreamProcessor {
 		void sendGeneralPoll();
 		void vdu_sys_video_kblayout();
 		void sendCursorPosition();
-		void sendScreenChar(uint16_t x, uint16_t y);
+		void sendScreenChar(char c);
 		void sendScreenPixel(uint16_t x, uint16_t y);
 		void sendColour(uint8_t colour);
 		void sendTime();
@@ -109,10 +109,12 @@ class VDUStreamProcessor {
 	public:
 		uint16_t id = 65535;
 
-		VDUStreamProcessor(std::shared_ptr<Stream> input, std::shared_ptr<Stream> output, uint16_t bufferId) :
-			inputStream(input), outputStream(output), originalOutputStream(output), id(bufferId) {}
+		VDUStreamProcessor(std::shared_ptr<Context> _context, std::shared_ptr<Stream> input, std::shared_ptr<Stream> output, uint16_t bufferId) :
+			context(_context), inputStream(input), outputStream(output), originalOutputStream(output), id(bufferId) {}
 		VDUStreamProcessor(Stream *input) :
-			inputStream(std::shared_ptr<Stream>(input)), outputStream(inputStream), originalOutputStream(inputStream) {}
+			inputStream(std::shared_ptr<Stream>(input)), outputStream(inputStream), originalOutputStream(inputStream) {
+				context = make_shared_psram<Context>();
+			}
 
 		inline bool byteAvailable() {
 			return inputStream->available() > 0;
@@ -136,6 +138,10 @@ class VDUStreamProcessor {
 
 		void wait_eZ80();
 		void sendModeInformation();
+
+		std::shared_ptr<Context> getContext() {
+			return context;
+		}
 };
 
 // Read an unsigned byte from the serial port, with a timeout
@@ -290,7 +296,7 @@ void VDUStreamProcessor::sendMouseData(MouseDelta * delta = nullptr) {
 	}
 	if (mouse) {
 		auto mStatus = mouse->status();
-		auto mousePos = toCurrentCoordinates(mStatus.X, mStatus.Y);
+		auto mousePos = context->toCurrentCoordinates(mStatus.X, mStatus.Y);
 		mouseX = mousePos.X;
 		mouseY = mousePos.Y;
 		buttons = mStatus.buttons.left << 0 | mStatus.buttons.right << 1 | mStatus.buttons.middle << 2;

@@ -249,7 +249,7 @@ void VDUStreamProcessor::bufferCall(uint16_t callBufferId, uint32_t offset) {
 	if (offset) {
 		multiBufferStream->seekTo(offset);
 	}
-	auto streamProcessor = make_unique_psram<VDUStreamProcessor>(multiBufferStream, outputStream, bufferId);
+	auto streamProcessor = make_unique_psram<VDUStreamProcessor>(context, multiBufferStream, outputStream, bufferId);
 	if (streamProcessor) {
 		streamProcessor->processAllAvailable();
 	} else {
