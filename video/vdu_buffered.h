@@ -266,6 +266,8 @@ void VDUStreamProcessor::bufferClear(uint16_t bufferId) {
 	if (bufferId == 65535) {
 		buffers.clear();
 		resetBitmaps();
+		// TODO reset current bitmaps in all processors
+		context->setCurrentBitmap(BUFFERED_BITMAP_BASEID);
 		resetFonts();
 		resetSamples();
 		return;
