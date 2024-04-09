@@ -458,18 +458,16 @@ void Context::setLineThickness(uint8_t thickness) {
 }
 
 void Context::setDottedLinePattern(uint8_t pattern[8]) {
-	auto linePattern = fabgl::LinePattern();
 	linePattern.setPattern(pattern);
 	canvas->setLinePattern(linePattern);
 }
 
 void Context::setDottedLinePatternLength(uint8_t length) {
+	linePatternLength = length == 0 ? 8 : length;
 	if (length == 0) {
 		// reset the line pattern
-		auto linePattern = fabgl::LinePattern();
+		linePattern = fabgl::LinePattern();
 		canvas->setLinePattern(linePattern);
-		canvas->setLinePatternLength(8);
-		return;
 	}
 	canvas->setLinePatternLength(length);
 }
@@ -897,6 +895,8 @@ void Context::activate() {
 	}
 	setLineThickness(lineThickness);
 	// reset line pattern
+	canvas->setLinePattern(linePattern);
+	canvas->setLinePatternLength(linePatternLength);
 	moveTo();
 }
 
