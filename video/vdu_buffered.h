@@ -268,6 +268,7 @@ void VDUStreamProcessor::bufferClear(uint16_t bufferId) {
 		resetBitmaps();
 		// TODO reset current bitmaps in all processors
 		context->setCurrentBitmap(BUFFERED_BITMAP_BASEID);
+		context->resetCharToBitmap();
 		resetFonts();
 		resetSamples();
 		return;
@@ -278,6 +279,7 @@ void VDUStreamProcessor::bufferClear(uint16_t bufferId) {
 	}
 	buffers.erase(bufferId);
 	clearBitmap(bufferId);
+	context->unmapBitmapFromChars(bufferId);
 	clearFont(bufferId);
 	clearSample(bufferId);
 	debug_log("bufferClear: cleared buffer %d\n\r", bufferId);
@@ -753,9 +755,10 @@ void VDUStreamProcessor::bufferConsolidate(uint16_t bufferId) {
 	debug_log("bufferConsolidate: consolidated %d streams into buffer %d\n\r", buffers[bufferId].size(), bufferId);
 }
 
-void clearTargets(std::vector<uint16_t> targets) {
+void VDUStreamProcessor::clearTargets(std::vector<uint16_t> targets) {
 	for (const auto target : targets) {
 		clearBitmap(target);
+		context->unmapBitmapFromChars(target);
 		clearFont(target);
 		if (buffers.find(target) != buffers.end()) {
 			buffers[target].clear();
