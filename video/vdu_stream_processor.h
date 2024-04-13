@@ -13,7 +13,7 @@
 #include "buffer_stream.h"
 #include "types.h"
 
-std::unordered_map<uint8_t, std::vector<std::shared_ptr<Context>>> contextStacks;
+std::unordered_map<uint8_t, std::shared_ptr<std::vector<std::shared_ptr<Context>>>> contextStacks;
 
 class VDUStreamProcessor {
 	private:
@@ -23,7 +23,7 @@ class VDUStreamProcessor {
 
 		// Graphics context storage and management
 		std::shared_ptr<Context> context;					// Current active context
-		std::vector<std::shared_ptr<Context>> contextStack;	// Current active context stack
+		std::shared_ptr<std::vector<std::shared_ptr<Context>>> contextStack;	// Current active context stack
 
 		bool commandsEnabled = true;
 
@@ -132,12 +132,14 @@ class VDUStreamProcessor {
 			inputStream(input), outputStream(output), originalOutputStream(output), id(bufferId) {
 				// NB this will become obsolete when merging in the buffered command optimisations
 				context = make_shared_psram<Context>(*_context);
-				contextStack.push_back(context);
+				contextStack = make_shared_psram<std::vector<std::shared_ptr<Context>>>();
+				contextStack->push_back(context);
 			}
 		VDUStreamProcessor(Stream *input) :
 			inputStream(std::shared_ptr<Stream>(input)), outputStream(inputStream), originalOutputStream(inputStream) {
 				context = make_shared_psram<Context>();
-				contextStack.push_back(context);
+				contextStack = make_shared_psram<std::vector<std::shared_ptr<Context>>>();
+				contextStack->push_back(context);
 			}
 
 		inline bool byteAvailable() {
